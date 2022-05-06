@@ -1,5 +1,8 @@
-use super::super::{Side, Direction, Color};
+use std::fmt::Display;
 
+use super::super::{Color, Direction, Side};
+
+#[derive(Clone, Copy)]
 pub struct Location {
     rank: u8,
     file: u8,
@@ -80,7 +83,6 @@ impl Location {
     pub const H7: Self = Self::new(8, 7);
     pub const H8: Self = Self::new(8, 8);
 
-
     const fn new(file: u8, rank: u8) -> Self {
         assert!(file <= 8);
         assert!(file > 0);
@@ -95,9 +97,17 @@ impl Location {
 
         let color = {
             if file % 2 == 0 {
-                if rank % 2 == 0 { Color::Black } else { Color::White }
+                if rank % 2 == 0 {
+                    Color::Black
+                } else {
+                    Color::White
+                }
             } else {
-                if rank % 2 == 0 { Color::White } else { Color::Black }
+                if rank % 2 == 0 {
+                    Color::White
+                } else {
+                    Color::Black
+                }
             }
         };
 
@@ -105,12 +115,21 @@ impl Location {
             rank,
             file,
             side,
-            color
+            color,
         }
     }
 
-    // Returns None if the move is impossible
-    pub const fn move_to(&self, dir: Direction, amount: u8) -> Option<Self> {
+    pub const fn color(&self) -> Color {
+        self.color
+    }
+
+    pub const fn index(&self) -> usize {
+        (((8 * (self.rank - 1)) + self.file) - 1) as usize
+    }
+
+    /// Returns None if the move is impossible
+    /// Applies a certain direction and amount and returns the new location
+    pub const fn apply(&self, dir: &Direction, amount: u8) -> Option<Self> {
         let me = match dir {
             Direction::Down => {
                 if (self.rank as i8 - amount as i8) <= 0 {
@@ -152,7 +171,9 @@ impl Location {
             }
 
             Direction::LeftDownDiag => {
-                if ((self.file as i8 - amount as i8) <= 0) || ((self.rank as i8 - amount as i8) <= 0) {
+                if ((self.file as i8 - amount as i8) <= 0)
+                    || ((self.rank as i8 - amount as i8) <= 0)
+                {
                     return None;
                 }
                 Self::new(self.file - amount, self.rank - amount)
@@ -166,7 +187,6 @@ impl Location {
             }
         };
 
-        
         Some(me)
     }
 }
@@ -175,6 +195,14 @@ impl core::fmt::Debug for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let chr = (self.file + 64) as char;
         write!(f, "{}{} ({:?}|{:?})", chr, self.rank, self.side, self.color)?;
+        Ok(())
+    }
+}
+
+impl Display for Location {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let chr = (self.file + 96) as char;
+        write!(f, "{}{}", chr, self.rank)?;
         Ok(())
     }
 }

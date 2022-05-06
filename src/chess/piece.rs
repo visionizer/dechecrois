@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use super::Color;
 
-
 #[repr(u8)]
 #[derive(Debug, PartialEq)]
 pub enum Kind {
@@ -10,7 +9,7 @@ pub enum Kind {
     King = 0x1,
     Pawn = 0x2,
     Knight = 0x3,
-    Bishop= 0x4,
+    Bishop = 0x4,
     Rook = 0x5,
     Queen = 0x6,
 }
@@ -41,9 +40,8 @@ impl Kind {
     }
 }
 
-
-
 #[repr(transparent)]
+#[derive(Clone, Copy)]
 pub struct Piece(u8);
 
 impl Piece {
@@ -53,11 +51,9 @@ impl Piece {
 
     pub const fn kind(&self) -> Kind {
         let piece = self.0 - self.color() as u8;
-        
+
         // SAFETY: This is 100% safe
-        unsafe {
-            core::mem::transmute(piece)
-        }
+        unsafe { core::mem::transmute(piece) }
     }
 
     pub const fn color(&self) -> Color {
@@ -65,7 +61,9 @@ impl Piece {
             Color::White
         } else if (self.0 & Color::Black as u8) != 0 {
             Color::Black
-        } else { unreachable!() }
+        } else {
+            unreachable!()
+        }
     }
 
     #[inline(always)]

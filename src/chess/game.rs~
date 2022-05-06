@@ -1,0 +1,54 @@
+use crate::player::Player;
+use crossbeam::channel::{bounded, Receiver, Sender};
+use rand::Rng;
+
+use super::board::{ChessBoard, RoChessBoard};
+use super::{board::Board, Color, Move};
+use crate::{engine::ChessEngine, graphics::GraphicsProvider};
+use spin::Mutex;
+use spin::RwLock;
+use std::sync::Arc;
+
+pub struct Game {
+    board: ChessBoard,
+    provider: GraphicsProvider<'static>,
+    engine: Mutex<ChessEngine<'static>>,
+    sender: Sender<Move>,
+    receiver: Receiver<Move>,
+}
+
+impl Game {
+    pub fn new(board: ChessBoard, provider: GraphicsProvider<'static>) -> Self {
+        let (sender, receiver) = bounded::<Move>(0);
+        Self {
+            board,
+            provider,
+            sender,
+            receiver,
+            engine: Mutex::new(ChessEngine::new()),
+        }
+    }
+
+    pub fn start(&'static mut self) {
+        let player_is_white = rand::thread_rng().gen::<bool>();
+        let color = if player_is_white {
+            Color::White
+        } else {
+            Color::Black
+        };
+        let engine_color = -color;
+
+        // std::thread::spawn(move || {
+        //     (&*self.provider).lock().init(&self.board.read(), color);
+        // });
+
+        std::thread::spawn(move || {
+            println!("Launching Engine thread");
+            self.engine.lock().init(self.board.read(), color);
+        });
+
+        Self::game_handler();
+    }
+
+    pub fn game_handler() {}
+}

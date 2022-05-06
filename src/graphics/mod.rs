@@ -1,10 +1,16 @@
-extern crate gl;
-use glutin::{event::Event, event_loop::{EventLoop, ControlFlow}, window::WindowBuilder, ContextBuilder};
+mod egui;
+use spin::Mutex;
+use std::sync::Arc;
 
+use crate::{
+    chess::{board::Board, Color, Move},
+    player::Player,
+};
 
-pub unsafe fn make_board() {
-    let events = EventLoop::new();
-    let window = WindowBuilder::new();
-    let gl = ContextBuilder::new().build_windowed(window, &events).unwrap().make_current().unwrap();
-    gl::load_with(|sym| gl.get_proc_address(sym));
+pub use self::egui::create_graphics_provider;
+
+pub type GraphicsProvider<'a> = Arc<Mutex<(dyn GraphicsProviderImpl<'a> + Send + Sync + 'a)>>;
+
+pub trait GraphicsProviderImpl<'a>: Player<'a> {
+    fn refresh(&'a mut self);
 }
